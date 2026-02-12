@@ -166,7 +166,11 @@ class SimpleRAGSystem:
                 self.collection = self.setup_collection()
             results = self.collection.get(include=["metadatas"])
             
-            patient_names = [result.get("patient_name") for result in results["metadatas"] if result.get("patient_name")]
+            patient_names = [
+                result.get("patient_name") 
+                for result in results["metadatas"]
+                if result.get("patient_name")
+                ]
             # print("PATIENTS \n")
             # print(set(patient_names))
             return patient_names
@@ -174,4 +178,15 @@ class SimpleRAGSystem:
         except Exception as e:
             st.error("Could not create patient names list.")
             return 0
+
+    def delete_by_patient_name(self, patient_name):
+        """Delete all documents matching a patient name."""
+        try:
+            if not self.collection:
+                self.collection = self.setup_collection()
+            self.collection.delete(where={"patient_name": patient_name})
+            return True
+        except Exception as e:
+            st.error(f"Error deleting documents: {str(e)}")
+            return False
         

@@ -43,11 +43,8 @@ class SimplePDFProcessor:
                     candidates.append(raw)
         if candidates:
             return candidates[0]
-
-        # Fallback to filename without extension
-        base = os.path.splitext(pdf_file.name)[0]
-        base = base.replace("_", " ").replace("-", " ").strip()
-        return base or "Unknown"
+        
+        return None
 
     def create_chunks(self, text, pdf_file, patient_name=None, file_hash=None):
         """Split text into chunks."""
@@ -78,7 +75,7 @@ class SimplePDFProcessor:
                     "text": chunk,
                     "metadata": {
                         "source": pdf_file.name,
-                        "patient_name": patient_name or "Unknown",
+                        "patient_name": patient_name,
                         "file_hash": file_hash,
                     },
                 }

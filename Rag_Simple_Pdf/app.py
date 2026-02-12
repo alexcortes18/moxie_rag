@@ -62,6 +62,17 @@ def main():
             f"- Name: {embedding_info['name']}\n"
             f"- Dimensions: {embedding_info['dimensions']}"
         )
+        with st.sidebar.expander("Maintenance"):
+            delete_name = st.text_input("Delete patient name")
+            if st.button("Delete", type="secondary"):
+                if delete_name:
+                    if st.session_state.rag_system.delete_by_patient_name(delete_name):
+                        st.session_state.patient_names = (
+                            st.session_state.rag_system.get_patient_names()
+                        )
+                        st.success(f"Deleted documents for: {delete_name}")
+                else:
+                    st.info("Enter a patient name to delete.")
     except Exception as e:
         st.error(f"Error initializing RAG system: {str(e)}")
         return
