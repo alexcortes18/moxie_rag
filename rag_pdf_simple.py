@@ -6,6 +6,7 @@ import os
 from dotenv import load_dotenv
 import PyPDF2
 import uuid
+import hashlib
 
 load_dotenv()
 
@@ -65,6 +66,11 @@ class SimplePDFProcessor:
         for page in reader.pages:
             text += page.extract_text() + "\n"
         return text
+    
+    def compute_file_hash(self, pdf_file):
+        """Stable hash of PDF bytes to detect duplicates across sessions."""
+        content = pdf_file.getvalue()
+        return hashlib.sha256(content).hexdigest()
 
     def infer_patient_name(self, text, pdf_file):
         """Best-effort patient name inference from PDF text or filename."""
@@ -92,7 +98,7 @@ class SimplePDFProcessor:
         base = base.replace("_", " ").replace("-", " ").strip()
         return base or "Unknown"
     
-    def create_chunks(self, text, pdf_file, patient_name=None):
+    def create_chunks(self, text, pdf_file, patient_name=None, file_hash=None):
         """Split text into chunks"""
         chunks = []
         start = 0
@@ -122,6 +128,7 @@ class SimplePDFProcessor:
                     "metadata": {
                         "source": pdf_file.name,
                         "patient_name": patient_name or "Unknown",
+                        "file_hash": file_hash,
                     }
                 }
             )
@@ -220,6 +227,17 @@ class SimpleRAGSystem:
             return True
         except Exception as e:
             st.error(f"Error adding documents: {str(e)}")
+    
+    def file_hash_exists(self, file_hash):
+        """Check if a file hash is already stored in the collection."""
+        try:
+            if not self.collection:
+                self.collection = self.setup_collection()
+            results = self.collection.get(where={"file_hash": file_hash}, limit=1)
+            return bool(results and results.get("ids"))
+        except Exception as e:
+            st.error(f"Error checking file hash: {str(e)}")
+            return False
         
     def query_documents(self, query, n_results=3, where=None):
         """Query documents and return relevant chunks"""
@@ -316,17 +334,28 @@ def main():
     # File Upload
     pdf_file = st.file_uploader("Upload PDF", type="pdf")
     
-    if pdf_file and pdf_file.name not in st.session_state.processed_files:
+    if pdf_file:
         # Process PDF
         processor = SimplePDFProcessor()
         with st.spinner("Processing PDF..."):
             try:
+                # Check for duplicates by file hash (always)
+                file_hash = processor.compute_file_hash(pdf_file)
+                if st.session_state.rag_system.file_hash_exists(file_hash):
+                    st.warning(
+                        f"Already ingested: **{pdf_file.name}** (embedding: **{embedding_model}**). Skipping."
+                    )
+                    st.session_state.processed_files.add(pdf_file.name)
+                    return
+
                 # Extract text
                 text = processor.readPDF(pdf_file)
                 # Infer patient name and create chunks
                 inferred_name = processor.infer_patient_name(text, pdf_file)
                 st.info(f"Inferred patient name: {inferred_name}")
-                chunks = processor.create_chunks(text, pdf_file, inferred_name)
+                chunks = processor.create_chunks(
+                    text, pdf_file, inferred_name, file_hash=file_hash
+                )
                 # Add to database
                 if st.session_state.rag_system.add_documents(chunks):
                     st.session_state.processed_files.add(pdf_file.name)
