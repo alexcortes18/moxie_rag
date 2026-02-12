@@ -31,7 +31,7 @@ def main():
         st.session_state.processed_files.clear()  # Clear processed files
         st.session_state.current_embedding_model = embedding_model
         st.session_state.rag_system = None  # Reset RAG system
-        st.warning("Embedding model changed. Please re-upload your documents.")
+        # st.warning("Embedding model changed. Please re-upload your documents.")
 
     # Initialize RAG system
     try:
@@ -83,7 +83,8 @@ def main():
                 st.error(f"Error processing PDF: {str(e)}")
 
     # Query interface
-    if st.session_state.processed_files:
+    doc_count = st.session_state.rag_system.get_document_count()
+    if doc_count > 0:
         st.markdown("---")
         st.subheader("Query Your Documents")
         query = st.text_input("Ask a question:")

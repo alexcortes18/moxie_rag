@@ -149,3 +149,13 @@ class SimpleRAGSystem:
             "dimensions": model_info["dimensions"],
             "model": self.embedding_model,
         }
+
+    def get_document_count(self):
+        """Return number of documents in the current collection."""
+        try:
+            if not self.collection:
+                self.collection = self.setup_collection()
+            return self.collection.count()
+        except Exception as e:
+            st.error(f"Error getting document count: {str(e)}")
+            return 0
