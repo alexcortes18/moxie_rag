@@ -10,8 +10,14 @@ load_dotenv()
 
 
 def main():
+    ############################################################
+    # PAGE TITLE
+    ############################################################
     st.title("Rag System")
 
+    ############################################################
+    # SESSION STATE
+    ############################################################
     # Initialize session state
     if "processed_files" not in st.session_state:
         st.session_state.processed_files = set()
@@ -22,10 +28,16 @@ def main():
     if "patient_map" not in st.session_state:
         st.session_state.patient_map = {}
 
-    # Initialize model selector
+    ############################################################
+    # MODEL SELECTION (SIDEBAR)
+    ############################################################
+
     model_selector = SimpleModelSelector()
     llm_model, embedding_model = model_selector.select_models()
 
+    ############################################################
+    # MODEL CHANGE HANDLING
+    ############################################################
     # Check if embedding model changed
     if embedding_model != st.session_state.current_embedding_model:
         st.session_state.processed_files.clear()  # Clear processed files
@@ -33,7 +45,10 @@ def main():
         st.session_state.rag_system = None  # Reset RAG system
         # st.warning("Embedding model changed. Please re-upload your documents.")
 
-    # Initialize RAG system
+    ############################################################
+    # RAG SYSTEM INITIALIZATION
+    ############################################################
+
     try:
         if st.session_state.rag_system is None:
             st.session_state.rag_system = SimpleRAGSystem(embedding_model, llm_model)
@@ -49,7 +64,10 @@ def main():
         st.error(f"Error initializing RAG system: {str(e)}")
         return
 
-    # File Upload
+    ############################################################
+    # FILE UPLOAD
+    ############################################################
+
     pdf_file = st.file_uploader("Upload PDF", type="pdf")
 
     if pdf_file:
@@ -82,7 +100,10 @@ def main():
             except Exception as e:
                 st.error(f"Error processing PDF: {str(e)}")
 
-    # Query interface
+    ############################################################
+    # QUERY INTERFACE
+    ############################################################
+
     doc_count = st.session_state.rag_system.get_document_count()
     if doc_count > 0:
         st.markdown("---")
