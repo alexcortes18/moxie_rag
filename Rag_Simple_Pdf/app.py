@@ -25,8 +25,8 @@ def main():
         st.session_state.current_embedding_model = None
     if "rag_system" not in st.session_state:
         st.session_state.rag_system = None
-    if "patient_map" not in st.session_state:
-        st.session_state.patient_map = {}
+    # if "patient_names" not in st.session_state:
+    #     st.session_state.patient_names = {}
 
     ############################################################
     # MODEL SELECTION (SIDEBAR)
@@ -52,6 +52,8 @@ def main():
     try:
         if st.session_state.rag_system is None:
             st.session_state.rag_system = SimpleRAGSystem(embedding_model, llm_model)
+            if "patient_names" not in st.session_state:
+                st.session_state.patient_names = st.session_state.rag_system.get_patient_names()
 
         # Display current embedding model info
         embedding_info = st.session_state.rag_system.get_embedding_info(model_selector)
@@ -95,7 +97,7 @@ def main():
                 # Add to database
                 if st.session_state.rag_system.add_documents(chunks):
                     st.session_state.processed_files.add(pdf_file.name)
-                    st.session_state.patient_map[pdf_file.name] = inferred_name
+                    st.session_state.patient_names.append(inferred_name)
                     st.success(f"Successfully processed {pdf_file.name}")
             except Exception as e:
                 st.error(f"Error processing PDF: {str(e)}")
@@ -109,7 +111,7 @@ def main():
         st.markdown("---")
         st.subheader("Query Your Documents")
         query = st.text_input("Ask a question:")
-        patient_names = sorted(set(st.session_state.patient_map.values()))
+        patient_names = sorted(set(st.session_state.patient_names))
         patient_filter = st.selectbox(
             "Filter by patient (optional)",
             options=["All patients"] + patient_names,

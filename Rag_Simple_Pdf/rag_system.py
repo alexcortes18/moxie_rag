@@ -90,17 +90,6 @@ class SimpleRAGSystem:
         except Exception as e:
             st.error(f"Error adding documents: {str(e)}")
 
-    def file_hash_exists(self, file_hash):
-        """Check if a file hash is already stored in the collection."""
-        try:
-            if not self.collection:
-                self.collection = self.setup_collection()
-            results = self.collection.get(where={"file_hash": file_hash}, limit=1)
-            return bool(results and results.get("ids"))
-        except Exception as e:
-            st.error(f"Error checking file hash: {str(e)}")
-            return False
-
     def query_documents(self, query, n_results=3, where=None):
         """Query documents and return relevant chunks."""
         try:
@@ -140,6 +129,16 @@ class SimpleRAGSystem:
         except Exception as e:
             st.error(f"Error generating response: {str(e)}")
             return None
+    def file_hash_exists(self, file_hash):
+        """Check if a file hash is already stored in the collection."""
+        try:
+            if not self.collection:
+                self.collection = self.setup_collection()
+            results = self.collection.get(where={"file_hash": file_hash}, limit=1)
+            return bool(results and results.get("ids"))
+        except Exception as e:
+            st.error(f"Error checking file hash: {str(e)}")
+            return False
 
     def get_embedding_info(self, model_selector):
         """Get information about current embedding model."""
@@ -159,3 +158,20 @@ class SimpleRAGSystem:
         except Exception as e:
             st.error(f"Error getting document count: {str(e)}")
             return 0
+    
+    def get_patient_names(self):
+        """Retrieve all the patient names already in the embedding database / collection"""
+        try:
+            if not self.collection:
+                self.collection = self.setup_collection()
+            results = self.collection.get(include=["metadatas"])
+            
+            patient_names = [result.get("patient_name") for result in results["metadatas"] if result.get("patient_name")]
+            # print("PATIENTS \n")
+            # print(set(patient_names))
+            return patient_names
+            
+        except Exception as e:
+            st.error("Could not create patient names list.")
+            return 0
+        
