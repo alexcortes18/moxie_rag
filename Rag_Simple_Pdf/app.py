@@ -63,7 +63,12 @@ def main():
             f"- Dimensions: {embedding_info['dimensions']}"
         )
         with st.sidebar.expander("Maintenance"):
-            delete_name = st.text_input("Delete patient name")
+            patient_names = sorted(set(st.session_state.patient_names))
+            delete_name = st.selectbox(
+            "Filter by patient (optional)",
+            options=["All patients"] + patient_names,
+        )
+            # delete_name = st.text_input("Delete patient name")
             if st.button("Delete", type="secondary"):
                 if delete_name:
                     if st.session_state.rag_system.delete_by_patient_name(delete_name):
@@ -101,6 +106,9 @@ def main():
                 text = processor.readPDF(pdf_file)
                 # Infer patient name and create chunks
                 inferred_name = processor.infer_patient_name(text, pdf_file)
+                if not inferred_name:
+                    st.warning("No patient name found. This PDF will not be ingested.")
+                    return
                 st.info(f"Inferred patient name: {inferred_name}")
                 chunks = processor.create_chunks(
                     text, pdf_file, inferred_name, file_hash=file_hash
