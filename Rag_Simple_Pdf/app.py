@@ -1,9 +1,9 @@
 import streamlit as st
 from dotenv import load_dotenv
 
-from Rag_Simple_Pdf.model_selector import SimpleModelSelector
-from Rag_Simple_Pdf.pdf_processor import SimplePDFProcessor
-from Rag_Simple_Pdf.rag_system import SimpleRAGSystem
+from model_selector import SimpleModelSelector
+from pdf_processor import SimplePDFProcessor
+from rag_system import SimpleRAGSystem
 
 
 load_dotenv()
