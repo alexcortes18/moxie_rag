@@ -14,7 +14,7 @@ python3.11 -m venv .venv
 If you want to target a specific Python 3.10 interpreter (system or another venv), use its full path. Example:
 
 ```bash
-/Users/alejandrocortes/Documents/Projects/AI\ Projects/rag_fundamentals/.venv/bin/python -m venv .venv
+/absolute/path/to/python3.10 -m venv .venv
 ```
 
 # 2) Activate the environment
